@@ -41,8 +41,9 @@ describe('overridePrototype', () => {
 
   class MicroFetcher extends Fetcher {
     constructor () {
-      super();
-      this.className = 'MicroFetcher';
+      const _this = nextInLine(new.target)();
+      _this.className = 'MicroFetcher';
+      return _this;
     }
 
     url () {
@@ -72,8 +73,14 @@ describe('overridePrototype', () => {
     assert.equal(microStubFetcher.className, 'MicroFetcher');
   });
 
-  it.skip('must call the new parent constructor', () => {
+  it('must call the new parent constructor', () => {
     assert.equal(microStubFetcher.parent, 'StubFetcher');
+  });
+
+  it('must not enter an infinite recursion', () => {
+    class NanoFetcher extends MicroFetcher {}
+    const nf = new NanoFetcher();
+    assert.isTrue(nf instanceof NanoFetcher);
   });
 
   const microFetcher = new MicroFetcher();

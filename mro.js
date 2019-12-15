@@ -22,14 +22,23 @@ function overridePrototype (subClass, superClass) {
   return cls;
 }
 
-function nextInLine (self) {
-  const proto = Object.getPrototypeOf(self);
+function nextInLine (instance) {
+  if (instance instanceof Function && instance.prototype) {
+    // Return super.
+    const cls = instance;
+    const superConstructor = Object.getPrototypeOf(cls);
+    return function (...args) {
+      return Reflect.construct(superConstructor, args, cls);
+    };
+  }
+
+  const proto = Object.getPrototypeOf(instance);
   const superProto = Object.getPrototypeOf(proto);
-  return new Proxy(self, {
+  return new Proxy(instance, {
     get (target, prop) {
-      const value = Reflect.get(superProto, prop, self);
+      const value = Reflect.get(superProto, prop, instance);
       if (value instanceof Function && value.bind instanceof Function) {
-        return value.bind(self);
+        return value.bind(instance);
       }
       // TODO: Check getters.
       // TODO: Check static methods.
