@@ -1,6 +1,6 @@
 const assert = chai.assert;
 
-suite('overridePrototype', () => {
+suite('overridePrototype', function () {
   class Fetcher {
     constructor () {
       this.className = 'Fetcher';
@@ -56,11 +56,11 @@ suite('overridePrototype', () => {
   }
 
   let MicroStubFetcher;
-  suiteSetup(() => {
+  suiteSetup(function () {
     MicroStubFetcher = overridePrototype(MicroFetcher, StubFetcher);
   });
 
-  test('must be a correct instance', () => {
+  test('must be a correct instance', function () {
     const microStubFetcher = new MicroStubFetcher();
     assert.isTrue(microStubFetcher instanceof MicroStubFetcher);
     assert.isFalse(microStubFetcher instanceof MicroFetcher);
@@ -69,30 +69,30 @@ suite('overridePrototype', () => {
     assert.equal(microStubFetcher.constructor, MicroStubFetcher);
   });
 
-  test('must call the next in line methods', () => {
+  test('must call the next in line methods', function () {
     const microStubFetcher = new MicroStubFetcher();
     assert.equal(microStubFetcher.fetch(), 'http://micro/StubFetcherMicro');
     assert.equal(microStubFetcher.process(), 'fake');
   });
 
-  test('must call the constructor', () => {
+  test('must call the constructor', function () {
     const microStubFetcher = new MicroStubFetcher();
     assert.equal(microStubFetcher.className, 'MicroFetcher');
   });
 
-  test('must call the new parent constructor', () => {
+  test('must call the new parent constructor', function () {
     const microStubFetcher = new MicroStubFetcher();
     assert.equal(microStubFetcher.parent, 'StubFetcher');
   });
 
-  test('must not enter an infinite recursion', () => {
+  test('must not enter an infinite recursion', function () {
     class NanoFetcher extends MicroFetcher { }
     const nf = new NanoFetcher();
     assert.isTrue(nf instanceof NanoFetcher);
     assert.equal(nf.fetch(), 'http://micro/FetcherMicro');
   });
 
-  test('original MicroFetcher must stay the same', () => {
+  test('original MicroFetcher must stay the same', function () {
     const microFetcher = new MicroFetcher();
     assert.equal(microFetcher.className, 'MicroFetcher');
     assert.equal(microFetcher.parent, 'Fetcher');
@@ -100,7 +100,7 @@ suite('overridePrototype', () => {
     assert.equal(microFetcher.process(), 'genuine');
   });
 
-  test('changing the prototype of MicroFetcher must not affect the overriden class', () => {
+  test('changing the prototype of MicroFetcher must not affect the overriden class', function () {
     const microFetcher = new MicroFetcher();
     const microStubFetcher = new MicroStubFetcher();
     MicroFetcher.prototype.fetch = function () {
@@ -110,7 +110,7 @@ suite('overridePrototype', () => {
     assert.notEqual(microStubFetcher.fetch(), 'http://localhost/StubFetcherMicroPathced');
   });
 
-  test("calling nextInLine with an object that isn't an instance of the class must throw an error", () => {
+  test("calling nextInLine with an object that isn't an instance of the class must throw an error", function () {
     class BrokenConstructorFetcher extends Fetcher {
       constructor () {
         return nextInLine(MicroFetcher, new.target)();
