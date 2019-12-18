@@ -41,7 +41,7 @@ describe('overridePrototype', () => {
 
   class MicroFetcher extends Fetcher {
     constructor () {
-      const _this = nextInLine(new.target)();
+      const _this = nextInLine(MicroFetcher, new.target)();
       _this.className = 'MicroFetcher';
       return _this;
     }
@@ -51,7 +51,7 @@ describe('overridePrototype', () => {
     }
 
     fetch () {
-      return nextInLine(this).fetch() + 'Micro';
+      return nextInLine(MicroFetcher, this).fetch() + 'Micro';
     }
   }
 
@@ -62,9 +62,10 @@ describe('overridePrototype', () => {
     assert.isFalse(microStubFetcher instanceof MicroFetcher);
     assert.isTrue(microStubFetcher instanceof StubFetcher);
     assert.isFalse(microStubFetcher instanceof Fetcher);
+    assert.equal(microStubFetcher.constructor, MicroStubFetcher);
   });
 
-  it('must call next in line methods', () => {
+  it('must call the next in line methods', () => {
     assert.equal(microStubFetcher.fetch(), 'http://micro/StubFetcherMicro');
     assert.equal(microStubFetcher.process(), 'fake');
   });
@@ -78,9 +79,10 @@ describe('overridePrototype', () => {
   });
 
   it('must not enter an infinite recursion', () => {
-    class NanoFetcher extends MicroFetcher {}
+    class NanoFetcher extends MicroFetcher { }
     const nf = new NanoFetcher();
     assert.isTrue(nf instanceof NanoFetcher);
+    assert.equal(nf.fetch(), 'http://micro/FetcherMicro');
   });
 
   const microFetcher = new MicroFetcher();
@@ -93,9 +95,33 @@ describe('overridePrototype', () => {
 
   it('changing the prototype of MicroFetcher must not affect the overriden class', () => {
     MicroFetcher.prototype.fetch = function () {
-      return nextInLine(this).fetch() + 'MicroPatched';
+      return nextInLine(MicroFetcher, this).fetch() + 'MicroPatched';
     };
     assert.equal(microFetcher.fetch(), 'http://micro/FetcherMicroPatched');
     assert.notEqual(microStubFetcher.fetch(), 'http://localhost/StubFetcherMicroPathced');
+  });
+
+  it("calling nextInLine with an object that isn't an instance of the class must throw an error", () => {
+    class BrokenConstructorFetcher extends Fetcher {
+      constructor () {
+        return nextInLine(MicroFetcher, new.target)();
+      }
+    }
+    assert.throws(
+      () => new BrokenConstructorFetcher().fetch(),
+      TypeError,
+      'obj must be an instance'
+    );
+
+    class BrokenFetcher extends Fetcher {
+      fetch () {
+        return nextInLine(MicroFetcher, this).fetch() + 'Broken';
+      }
+    }
+    assert.throws(
+      () => new BrokenFetcher().fetch(),
+      TypeError,
+      'obj must be an instance'
+    );
   });
 });

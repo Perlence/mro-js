@@ -14,31 +14,46 @@ function overridePrototype (subClass, superClass) {
   // Copy the properties to the new class.
   cls.prototype = Object.create(
     superClass.prototype,
-    Object.getOwnPropertyDescriptors(subClass.prototype)
+    {
+      ...Object.getOwnPropertyDescriptors(subClass.prototype),
+      constructor: { value: cls, writable: true, configurable: true }
+    }
   );
-  Object.assign(cls.prototype, subClass.prototype);
+  Object.defineProperty(cls, '__original__', { value: subClass });
 
   Object.setPrototypeOf(cls, superClass);
   return cls;
 }
 
-function nextInLine (instance) {
-  if (instance instanceof Function && instance.prototype) {
-    // Return super.
-    const cls = instance;
-    const superConstructor = Object.getPrototypeOf(cls);
-    return function (...args) {
-      return Reflect.construct(superConstructor, args, cls);
-    };
+function nextInLine (cls, instanceOrSubclass) {
+  let subClass;
+  if (instanceOrSubclass instanceof Function && instanceOrSubclass.prototype) {
+    subClass = instanceOrSubclass;
+  } else {
+    subClass = instanceOrSubclass.constructor;
+  }
+  let superClass;
+  // Walk up the prototype chain of `subClass` and find the super class of `cls`.
+  while (true) {
+    superClass = Object.getPrototypeOf(subClass);
+    if ((subClass.__original__ || subClass) === (cls.__original__ || cls)) {
+      // Found it.
+      break;
+    }
+    if (superClass == null) {
+      throw new TypeError('nextInLine(cls, obj): obj must be an instance or subtype of type');
+    }
+    subClass = superClass;
   }
 
-  const proto = Object.getPrototypeOf(instance);
-  const superProto = Object.getPrototypeOf(proto);
-  return new Proxy(instance, {
+  const constructor = function (...args) {
+    return Reflect.construct(superClass, args, instanceOrSubclass);
+  };
+  return new Proxy(constructor, {
     get (target, prop) {
-      const value = Reflect.get(superProto, prop, instance);
-      if (value instanceof Function && value.bind instanceof Function) {
-        return value.bind(instance);
+      const value = Reflect.get(superClass.prototype, prop, instanceOrSubclass);
+      if (value instanceof Function) {
+        return value.bind(instanceOrSubclass);
       }
       // TODO: Check getters.
       // TODO: Check static methods.
