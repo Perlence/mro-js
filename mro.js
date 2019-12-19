@@ -15,25 +15,34 @@ function overridePrototype (subClass, superClass) {
     return Reflect.construct(subClass, args, cls);
   }
 
-  // Copy the properties to the new class.
-  cls.prototype = Object.create(
+  // Copy the subClass prototype properties to the new class.
+  const prototype = Object.create(
     superClass.prototype,
     {
       ...Object.getOwnPropertyDescriptors(subClass.prototype),
       constructor: { value: cls, writable: true, configurable: true }
     }
   );
-  Object.defineProperty(cls, '__original__', { value: subClass });
+  // Copy the subClass static properties to the new class.
+  Object.defineProperties(
+    cls,
+    {
+      ...Object.getOwnPropertyDescriptors(subClass),
+      prototype: { value: prototype },
+      __original__: { value: subClass }
+    }
+  );
 
   Object.setPrototypeOf(cls, superClass);
   return cls;
 }
 
 function nextInLine (cls, instanceOrSubclass) {
-  let subClass;
+  let instance, subClass;
   if (instanceOrSubclass instanceof Function && instanceOrSubclass.prototype) {
     subClass = instanceOrSubclass;
   } else {
+    instance = instanceOrSubclass;
     subClass = instanceOrSubclass.constructor;
   }
   let superClass;
@@ -54,13 +63,12 @@ function nextInLine (cls, instanceOrSubclass) {
     return Reflect.construct(superClass, args, instanceOrSubclass);
   };
   return new Proxy(constructor, {
-    get (target, prop) {
-      const value = Reflect.get(superClass.prototype, prop, instanceOrSubclass);
+    get (__, prop) {
+      const target = (instance != null) ? superClass.prototype : superClass;
+      const value = Reflect.get(target, prop, instanceOrSubclass);
       if (value instanceof Function) {
         return value.bind(instanceOrSubclass);
       }
-      // TODO: Check getters.
-      // TODO: Check static methods.
       return value;
     }
   });
