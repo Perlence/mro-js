@@ -60,6 +60,11 @@ suite('overridePrototype', function () {
     MicroStubFetcher = overridePrototype(MicroFetcher, StubFetcher);
   });
 
+  test('must not override the prototype unless necessary', function () {
+    const MF = overridePrototype(MicroFetcher, Fetcher);
+    assert.strictEqual(MF, MicroFetcher);
+  });
+
   test('must be a correct instance', function () {
     const microStubFetcher = new MicroStubFetcher();
     assert.isTrue(microStubFetcher instanceof MicroStubFetcher);

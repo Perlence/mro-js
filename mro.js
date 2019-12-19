@@ -6,6 +6,10 @@ function mro (...classes) {
 }
 
 function overridePrototype (subClass, superClass) {
+  if (Object.getPrototypeOf(subClass) === superClass) {
+    return subClass;
+  }
+
   function cls (...args) {
     // Call the constructor of the subClass.
     return Reflect.construct(subClass, args, cls);
