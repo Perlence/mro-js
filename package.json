@@ -16,7 +16,7 @@
     "mocha": "^6.2.2"
   },
   "scripts": {
-    "test": "mocha ./tests.html"
+    "test": "mocha ./tests.js"
   },
   "author": "Sviatoslav Abakumov"
 }
