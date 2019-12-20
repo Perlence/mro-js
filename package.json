@@ -14,11 +14,12 @@
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.1",
     "mocha": "^6.2.2",
-    "watchify": "^3.11.1"
+    "webpack": "^4.41.4",
+    "webpack-cli": "^3.3.10"
   },
   "scripts": {
     "test": "mocha",
-    "watchify": "watchify --debug test.js -o test.bundle.js"
+    "webpack": "webpack"
   },
   "mocha": {
     "ui": "tdd"
