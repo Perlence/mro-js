@@ -74,10 +74,8 @@ function nextInLine (cls, instanceOrSubclass) {
   });
 }
 
-function getMRO (cls) {
-  const proto = Object.getPrototypeOf(cls);
-  if (proto == null) {
-    return [cls];
-  }
-  return [cls, ...getMRO(proto)];
-}
+module.exports = {
+  mro,
+  overridePrototype,
+  nextInLine
+};

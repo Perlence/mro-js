@@ -1,4 +1,5 @@
-const assert = chai.assert;
+const assert = require('chai').assert;
+const { overridePrototype, nextInLine } = require('./mro');
 
 suite('overridePrototype', function () {
   class Fetcher {
