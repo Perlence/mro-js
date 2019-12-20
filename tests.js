@@ -67,6 +67,8 @@ suite('overridePrototype', function () {
     }
   }
 
+  class NanoFetcher extends MicroFetcher {}
+
   let MicroStubFetcher;
   suiteSetup(function () {
     MicroStubFetcher = overridePrototype(MicroFetcher, StubFetcher);
@@ -94,16 +96,23 @@ suite('overridePrototype', function () {
     const microStubFetcher = new MicroStubFetcher();
     assert.equal(microStubFetcher.fetch(), 'http://localhost/micro/StubFetcherMicro');
     assert.equal(microStubFetcher.process(), 'fake');
+
+    const nanoFetcher = new NanoFetcher();
+    assert.isTrue(nanoFetcher instanceof NanoFetcher);
+    assert.equal(nanoFetcher.fetch(), microFetcher.fetch());
+    assert.equal(nanoFetcher.process(), microFetcher.process());
   });
 
   test('must call next in line getter', function () {
     assert.equal(new MicroFetcher().url, 'http://example.com/micro');
     assert.equal(new MicroStubFetcher().url, 'http://localhost/micro');
+    assert.equal(new NanoFetcher().url, new MicroFetcher().url);
   });
 
   test('must call next in line static method', function () {
     assert.equal(MicroFetcher.staticName(), 'MicroFetcher');
     assert.equal(MicroStubFetcher.staticName(), 'MicroStubFetcher');
+    assert.equal(NanoFetcher.staticName(), MicroFetcher.staticName());
   });
 
   test('must call the constructor', function () {
@@ -114,13 +123,6 @@ suite('overridePrototype', function () {
   test('must call the new parent constructor', function () {
     const microStubFetcher = new MicroStubFetcher();
     assert.equal(microStubFetcher.parent, 'StubFetcher');
-  });
-
-  test('must not enter an infinite recursion', function () {
-    class NanoFetcher extends MicroFetcher { }
-    const nf = new NanoFetcher();
-    assert.isTrue(nf instanceof NanoFetcher);
-    assert.equal(nf.fetch(), 'http://example.com/micro/FetcherMicro');
   });
 
   test('original MicroFetcher must stay the same', function () {
