@@ -17,8 +17,8 @@
     "watchify": "^3.11.1"
   },
   "scripts": {
-    "test": "mocha tests.js",
-    "watchify": "watchify tests.js -o tests.bundle.js"
+    "test": "mocha",
+    "watchify": "watchify test.js -o test.bundle.js"
   },
   "mocha": {
     "ui": "tdd"
