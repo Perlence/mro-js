@@ -1,3 +1,4 @@
+/* eslint-disable lines-between-class-members */
 const assert = require('chai').assert;
 const { overridePrototype, nextInLine } = require('./mro');
 
@@ -7,19 +8,15 @@ suite('overridePrototype', function () {
       this.className = 'Fetcher';
       this.parent = this.className;
     }
-
     static staticName () {
       return 'Fetcher';
     }
-
     get url () {
       return 'http://example.com';
     }
-
     fetch () {
       return `${this.url}/Fetcher`;
     }
-
     process () {
       return 'genuine';
     }
@@ -30,19 +27,15 @@ suite('overridePrototype', function () {
       this.className = 'StubFetcher';
       this.parent = this.className;
     }
-
     static staticName () {
       return 'StubFetcher';
     }
-
     get url () {
       return 'http://localhost';
     }
-
     fetch () {
       return `${this.url}/StubFetcher`;
     }
-
     process () {
       return 'fake';
     }
@@ -54,15 +47,12 @@ suite('overridePrototype', function () {
       _this.className = 'MicroFetcher';
       return _this;
     }
-
     static staticName () {
       return 'Micro' + nextInLine(MicroFetcher, this).staticName();
     }
-
     get url () {
       return nextInLine(MicroFetcher, this).url + '/micro';
     }
-
     fetch () {
       return nextInLine(MicroFetcher, this).fetch() + 'Micro';
     }
