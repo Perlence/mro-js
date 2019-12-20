@@ -17,8 +17,11 @@
     "watchify": "^3.11.1"
   },
   "scripts": {
-    "test": "mocha --ui tdd tests.js",
+    "test": "mocha tests.js",
     "watchify": "watchify tests.js -o tests.bundle.js"
+  },
+  "mocha": {
+    "ui": "tdd"
   },
   "author": "Sviatoslav Abakumov"
 }
