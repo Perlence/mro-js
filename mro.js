@@ -1,11 +1,51 @@
-function mro (...classes) {
-  return classes.reduceRight((superClass, subClass) => {
+function coop (...bases) {
+  // TODO: Throw "TypeError: duplicate base class ${}".
+  const protoChains = bases.map(prototypeChain);
+  protoChains.push(bases.map(cls => cls.prototype));
+  const mro = linearize(protoChains);
+  const ctors = mro.map(cls => cls.constructor);
+  return ctors.reduceRight((superClass, subClass) => {
     return overridePrototype(subClass, superClass);
   });
 }
 
+function prototypeChain (ctor) {
+  let proto = ctor.prototype;
+  let parent;
+  const result = [proto];
+  do {
+    parent = Object.getPrototypeOf(proto);
+    result.push(parent);
+    proto = parent;
+  } while (parent != null);
+  return result;
+}
+
+function linearize (baseMROs) {
+  const result = [];
+  while (baseMROs.length) {
+    let head;
+    for (const baseMRO of baseMROs) {
+      const h = baseMRO[0];
+      if (!baseMROs.some((b) => b.indexOf(h) > 0)) {
+        head = h;
+        break;
+      }
+    }
+    if (typeof head === 'undefined') {
+      throw new TypeError('Cannot create a consistent method resolution order(MRO) for bases');
+    }
+    if (head != null) {
+      result.push(head);
+    }
+    baseMROs = baseMROs.map((b) => b.filter((c) => c !== head));
+    baseMROs = baseMROs.filter((b) => b.length);
+  }
+  return result;
+}
+
 function overridePrototype (subClass, superClass) {
-  if (Object.getPrototypeOf(subClass) === superClass) {
+  if (Object.getPrototypeOf(subClass.prototype) === superClass.prototype) {
     return subClass;
   }
 
@@ -82,7 +122,6 @@ function originalClass (cls) {
 }
 
 module.exports = {
-  mro,
-  overridePrototype,
+  coop,
   nextInLine
 };

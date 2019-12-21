@@ -1,8 +1,8 @@
 /* eslint-disable lines-between-class-members */
 const assert = require('chai').assert;
-const { overridePrototype, nextInLine } = require('./mro');
+const { coop, nextInLine } = require('./mro');
 
-suite('overridePrototype', function () {
+suite('coop', function () {
   class Fetcher {
     constructor () {
       this.className = 'Fetcher';
@@ -64,11 +64,11 @@ suite('overridePrototype', function () {
 
   let MicroStubFetcher;
   suiteSetup(function () {
-    MicroStubFetcher = (class extends overridePrototype(MicroFetcher, StubFetcher) {});
+    MicroStubFetcher = (class extends coop(MicroFetcher, StubFetcher) {});
   });
 
   test('must not override the prototype unless necessary', function () {
-    const MF = overridePrototype(MicroFetcher, Fetcher);
+    const MF = coop(MicroFetcher, Fetcher);
     assert.strictEqual(MF, MicroFetcher);
   });
 
