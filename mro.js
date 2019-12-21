@@ -42,12 +42,12 @@ function linearize (baseMROs) {
   while (baseMROs.length) {
     let head;
     for (const baseMRO of baseMROs) {
-      const h = baseMRO[0];
+      const candidate = baseMRO[0];
       const hasNoSubclasses = baseMROs.every(bases => {
-        return bases.findIndex(b => original(b) === original(h)) < 1;
+        return bases.findIndex(b => original(b) === original(candidate)) < 1;
       });
       if (hasNoSubclasses) {
-        head = h;
+        head = candidate;
         break;
       }
     }
@@ -61,7 +61,11 @@ function linearize (baseMROs) {
     if (head != null) {
       result.push(head);
     }
-    baseMROs = baseMROs.map(bases => bases.filter(b => original(b) !== original(head)));
+    baseMROs.forEach(bases => {
+      if (original(bases[0]) === original(head)) {
+        bases.shift();
+      }
+    });
     baseMROs = baseMROs.filter(bases => bases.length);
   }
   return result;
