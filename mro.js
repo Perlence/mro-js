@@ -1,5 +1,9 @@
 function coop (...bases) {
-  // TODO: Throw "TypeError: duplicate base class ${}".
+  const duplicateBase = findDuplicate(bases);
+  if (duplicateBase) {
+    throw new TypeError(`duplicate base class ${original(duplicateBase).name}`);
+  }
+
   const protoChains = bases.map(prototypeChain);
   protoChains.push(bases.map(cls => cls.prototype));
   const mro = linearize(protoChains);
@@ -7,6 +11,16 @@ function coop (...bases) {
   return ctors.reduceRight((superClass, subClass) => {
     return overridePrototype(subClass, superClass);
   });
+}
+
+function findDuplicate (array) {
+  const set = new Set();
+  for (const item of array) {
+    if (set.has(item)) {
+      return item;
+    }
+    set.add(item);
+  }
 }
 
 function prototypeChain (ctor) {
@@ -36,7 +50,11 @@ function linearize (baseMROs) {
       }
     }
     if (typeof head === 'undefined') {
-      throw new TypeError('Cannot create a consistent method resolution order(MRO) for bases');
+      const leafClassNames = baseMROs.map(bs => original(bs[0]).constructor.name);
+      const uniqueClassNames = Array.from(new Set(leafClassNames));
+      const bases = uniqueClassNames.join(', ');
+      throw new TypeError(
+        `Cannot create a consistent method resolution order (MRO) for bases ${bases}`);
     }
     if (head != null) {
       result.push(head);

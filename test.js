@@ -72,22 +72,27 @@ suite('coop', function () {
     assert.strictEqual(MF, MicroFetcher);
   });
 
+  test('must throw duplicate base class error', function () {
+    assert.throws(() => {
+      coop(Fetcher, Fetcher);
+    }, TypeError, 'duplicate base class Fetcher');
+  });
+
   test('must throw unconsistent MRO error', function () {
     class A {}
     class B extends A {}
     class C {}
-    const errorMsg = 'consistent method resolution order';
     assert.throws(() => {
       coop(A, B);
-    }, TypeError, errorMsg);
+    }, TypeError, 'for bases A, B');
     assert.throws(() => {
       coop(A, C, B);
-    }, TypeError, errorMsg);
+    }, TypeError, 'for bases A, C, B');
     class D extends coop(A, C) {}
     class E extends coop(C, A) {}
     assert.throws(() => {
       coop(D, E);
-    }, TypeError, errorMsg);
+    }, TypeError, 'for bases A, C');
   });
 
   test('must be a correct instance', function () {
