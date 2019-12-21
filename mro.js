@@ -1,3 +1,5 @@
+const ORIGINAL = Symbol('original');
+
 function coop (...bases) {
   const duplicateBase = findDuplicate(bases);
   if (duplicateBase) {
@@ -82,7 +84,7 @@ function overridePrototype (subClass, superClass) {
     {
       ...Object.getOwnPropertyDescriptors(subClass.prototype),
       constructor: { value: cls, writable: true, configurable: true },
-      __original__: { value: subClass.prototype }
+      [ORIGINAL]: { value: subClass.prototype }
     }
   );
   // Copy the subClass static properties to the new class.
@@ -91,7 +93,7 @@ function overridePrototype (subClass, superClass) {
     {
       ...Object.getOwnPropertyDescriptors(subClass),
       prototype: { value: prototype },
-      __original__: { value: subClass }
+      [ORIGINAL]: { value: subClass }
     }
   );
 
@@ -140,8 +142,8 @@ function original (obj) {
   if (!obj) {
     return obj;
   }
-  if (Object.prototype.hasOwnProperty.call(obj, '__original__')) {
-    return obj.__original__;
+  if (Object.prototype.hasOwnProperty.call(obj, ORIGINAL)) {
+    return obj[ORIGINAL];
   }
   return obj;
 }
