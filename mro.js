@@ -27,7 +27,10 @@ function linearize (baseMROs) {
     let head;
     for (const baseMRO of baseMROs) {
       const h = baseMRO[0];
-      if (!baseMROs.some((b) => b.indexOf(h) > 0)) {
+      const hasNoSubclasses = baseMROs.every(bases => {
+        return bases.findIndex(b => original(b) === original(h)) < 1;
+      });
+      if (hasNoSubclasses) {
         head = h;
         break;
       }
@@ -38,8 +41,8 @@ function linearize (baseMROs) {
     if (head != null) {
       result.push(head);
     }
-    baseMROs = baseMROs.map((b) => b.filter((c) => c !== head));
-    baseMROs = baseMROs.filter((b) => b.length);
+    baseMROs = baseMROs.map(bases => bases.filter(b => original(b) !== original(head)));
+    baseMROs = baseMROs.filter(bases => bases.length);
   }
   return result;
 }
@@ -60,7 +63,8 @@ function overridePrototype (subClass, superClass) {
     superClass.prototype,
     {
       ...Object.getOwnPropertyDescriptors(subClass.prototype),
-      constructor: { value: cls, writable: true, configurable: true }
+      constructor: { value: cls, writable: true, configurable: true },
+      __original__: { value: subClass.prototype }
     }
   );
   // Copy the subClass static properties to the new class.
@@ -89,7 +93,7 @@ function nextInLine (cls, instanceOrSubclass) {
   // Walk up the prototype chain of `subClass` and find the super class of `cls`.
   while (true) {
     superClass = Object.getPrototypeOf(subClass);
-    if (originalClass(subClass) === originalClass(cls)) {
+    if (original(subClass) === original(cls)) {
       // Found it.
       break;
     }
@@ -114,11 +118,14 @@ function nextInLine (cls, instanceOrSubclass) {
   });
 }
 
-function originalClass (cls) {
-  if (Object.prototype.hasOwnProperty.call(cls, '__original__')) {
-    return cls.__original__;
+function original (obj) {
+  if (!obj) {
+    return obj;
   }
-  return cls;
+  if (Object.prototype.hasOwnProperty.call(obj, '__original__')) {
+    return obj.__original__;
+  }
+  return obj;
 }
 
 module.exports = {

@@ -72,6 +72,24 @@ suite('coop', function () {
     assert.strictEqual(MF, MicroFetcher);
   });
 
+  test('must throw unconsistent MRO error', function () {
+    class A {}
+    class B extends A {}
+    class C {}
+    const errorMsg = 'consistent method resolution order';
+    assert.throws(() => {
+      coop(A, B);
+    }, TypeError, errorMsg);
+    assert.throws(() => {
+      coop(A, C, B);
+    }, TypeError, errorMsg);
+    class D extends coop(A, C) {}
+    class E extends coop(C, A) {}
+    assert.throws(() => {
+      coop(D, E);
+    }, TypeError, errorMsg);
+  });
+
   test('must be a correct instance', function () {
     const microStubFetcher = new MicroStubFetcher();
     assert.isTrue(microStubFetcher instanceof MicroStubFetcher);
