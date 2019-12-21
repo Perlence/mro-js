@@ -60,11 +60,13 @@ suite('coop', function () {
     }
   }
 
-  class NanoFetcher extends MicroFetcher {}
+  class SmallFetcher extends MicroFetcher {}
 
   let MicroStubFetcher;
+  let SmallStubFetcher;
   suiteSetup(function () {
     MicroStubFetcher = (class extends coop(MicroFetcher, StubFetcher) {});
+    SmallStubFetcher = (class extends MicroStubFetcher {});
   });
 
   test('must not override the prototype unless necessary', function () {
@@ -109,36 +111,42 @@ suite('coop', function () {
     assert.equal(microFetcher.fetch(), 'http://example.com/micro/FetcherMicro');
     assert.equal(microFetcher.process(), 'genuine');
 
+    const smallFetcher = new SmallFetcher();
+    assert.isTrue(smallFetcher instanceof SmallFetcher);
+    assert.equal(smallFetcher.fetch(), microFetcher.fetch());
+    assert.equal(smallFetcher.process(), microFetcher.process());
+
     const microStubFetcher = new MicroStubFetcher();
     assert.equal(microStubFetcher.fetch(), 'http://localhost/micro/StubFetcherMicro');
     assert.equal(microStubFetcher.process(), 'fake');
 
-    const nanoFetcher = new NanoFetcher();
-    assert.isTrue(nanoFetcher instanceof NanoFetcher);
-    assert.equal(nanoFetcher.fetch(), microFetcher.fetch());
-    assert.equal(nanoFetcher.process(), microFetcher.process());
+    const smallStubFetcher = new SmallStubFetcher();
+    assert.equal(smallStubFetcher.fetch(), 'http://localhost/micro/StubFetcherMicro');
+    assert.equal(smallStubFetcher.process(), 'fake');
   });
 
   test('must call next in line getter', function () {
     assert.equal(new MicroFetcher().url, 'http://example.com/micro');
+    assert.equal(new SmallFetcher().url, new MicroFetcher().url);
     assert.equal(new MicroStubFetcher().url, 'http://localhost/micro');
-    assert.equal(new NanoFetcher().url, new MicroFetcher().url);
+    assert.equal(new SmallStubFetcher().url, 'http://localhost/micro');
   });
 
   test('must call next in line static method', function () {
     assert.equal(MicroFetcher.staticName(), 'MicroFetcher');
+    assert.equal(SmallFetcher.staticName(), MicroFetcher.staticName());
     assert.equal(MicroStubFetcher.staticName(), 'MicroStubFetcher');
-    assert.equal(NanoFetcher.staticName(), MicroFetcher.staticName());
+    assert.equal(SmallStubFetcher.staticName(), 'MicroStubFetcher');
   });
 
   test('must call the constructor', function () {
-    const microStubFetcher = new MicroStubFetcher();
-    assert.equal(microStubFetcher.className, 'MicroFetcher');
+    assert.equal(new MicroStubFetcher().className, 'MicroFetcher');
+    assert.equal(new SmallStubFetcher().className, 'MicroFetcher');
   });
 
   test('must call the new parent constructor', function () {
-    const microStubFetcher = new MicroStubFetcher();
-    assert.equal(microStubFetcher.parent, 'StubFetcher');
+    assert.equal(new MicroStubFetcher().parent, 'StubFetcher');
+    assert.equal(new SmallStubFetcher().parent, 'StubFetcher');
   });
 
   test('original MicroFetcher must stay the same', function () {
