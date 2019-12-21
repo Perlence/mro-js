@@ -22,10 +22,12 @@ suite('overridePrototype', function () {
     }
   }
 
-  class StubFetcher {
+  class StubFetcher extends Fetcher {
     constructor () {
-      this.className = 'StubFetcher';
-      this.parent = this.className;
+      const _this = nextInLine(StubFetcher, new.target)();
+      _this.className = 'StubFetcher';
+      _this.parent = _this.className;
+      return _this;
     }
     static staticName () {
       return 'StubFetcher';
@@ -62,7 +64,7 @@ suite('overridePrototype', function () {
 
   let MicroStubFetcher;
   suiteSetup(function () {
-    MicroStubFetcher = overridePrototype(MicroFetcher, StubFetcher);
+    MicroStubFetcher = (class extends overridePrototype(MicroFetcher, StubFetcher) {});
   });
 
   test('must not override the prototype unless necessary', function () {
@@ -75,7 +77,7 @@ suite('overridePrototype', function () {
     assert.isTrue(microStubFetcher instanceof MicroStubFetcher);
     assert.isFalse(microStubFetcher instanceof MicroFetcher);
     assert.isTrue(microStubFetcher instanceof StubFetcher);
-    assert.isFalse(microStubFetcher instanceof Fetcher);
+    assert.isTrue(microStubFetcher instanceof Fetcher);
     assert.equal(microStubFetcher.constructor, MicroStubFetcher);
   });
 

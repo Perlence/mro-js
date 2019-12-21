@@ -1,6 +1,5 @@
 function mro (...classes) {
   return classes.reduceRight((superClass, subClass) => {
-    // TODO: Check if subClass already extends superClass.
     return overridePrototype(subClass, superClass);
   });
 }
@@ -10,10 +9,11 @@ function overridePrototype (subClass, superClass) {
     return subClass;
   }
 
-  function cls (...args) {
-    // Call the constructor of the subClass.
-    return Reflect.construct(subClass, args, cls);
-  }
+  const cls = new Proxy(function () {}, {
+    construct: function (target, args, newTarget) {
+      return Reflect.construct(subClass, args, newTarget);
+    }
+  });
 
   // Copy the subClass prototype properties to the new class.
   const prototype = Object.create(
@@ -49,7 +49,7 @@ function nextInLine (cls, instanceOrSubclass) {
   // Walk up the prototype chain of `subClass` and find the super class of `cls`.
   while (true) {
     superClass = Object.getPrototypeOf(subClass);
-    if ((subClass.__original__ || subClass) === (cls.__original__ || cls)) {
+    if (originalClass(subClass) === originalClass(cls)) {
       // Found it.
       break;
     }
@@ -72,6 +72,13 @@ function nextInLine (cls, instanceOrSubclass) {
       return value;
     }
   });
+}
+
+function originalClass (cls) {
+  if (Object.prototype.hasOwnProperty.call(cls, '__original__')) {
+    return cls.__original__;
+  }
+  return cls;
 }
 
 module.exports = {
